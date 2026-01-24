@@ -2,35 +2,48 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BarChart, Settings } from "lucide-react";
-
-
-// Icons
 import {
   LayoutDashboard,
   FileText,
   Users,
   Receipt,
+  Package,
   LogOut,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/browser";
 
 export default function Sidebar({ collapsed, setCollapsed }: any) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const supabase = useMemo(() => createClient(), []);
   const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
-    async function check() {
+    let isMounted = true;
+
+    const syncSession = async () => {
       const { data } = await supabase.auth.getSession();
-      setLoggedIn(!!data.session);
-    }
-    check();
-  }, []);
+      if (isMounted) setLoggedIn(!!data.session);
+    };
+
+    syncSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) setLoggedIn(!!session);
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -72,6 +85,7 @@ export default function Sidebar({ collapsed, setCollapsed }: any) {
           { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard },
           { href: "/orders", label: "Orders", Icon: FileText },
           { href: "/customers", label: "Customers", Icon: Users },
+          { href: "/products", label: "Products", Icon: Package },
           { href: "/invoices", label: "Invoices", Icon: Receipt },
           { href: "/reports", label: "Reports", Icon: BarChart },
           { href: "/settings", label: "Settings", Icon: Settings },

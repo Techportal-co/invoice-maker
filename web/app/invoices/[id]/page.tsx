@@ -1,68 +1,90 @@
-// web/app/invoices/[id]/page.tsx
+import { getInvoiceById } from "@/lib/db/invoices";
 import { notFound } from "next/navigation";
 
-export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+// ---- FIX: Add Types ---- //
+interface InvoiceLineItem {
+  id: string;
+  product_id?: string | null;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate: number;
+  line_total: number;
+}
 
-  // fetch via internal API route
-  const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/api/invoices/${id}`, {
-    // Note: this absolute URL will call your deployment. In dev, better to call the internal route:
-    // const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/invoices/${id}`)
-    // But we'll call relative in dev:
-    cache: "no-store",
-    // alternatively, you can import supabaseAdmin and query directly (safer / faster)
-  });
+interface Customer {
+  id: string;
+  name: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
 
-  // If you prefer direct DB call, uncomment the block below and import supabaseAdmin:
-  // import { supabaseAdmin } from "@/lib/supabaseAdmin";
-  // const { data, error } = await supabaseAdmin.from("invoices").select("*, invoice_line_items(*), clients(*)").eq("id", id).single();
+interface InvoiceDetail {
+  id: string;
+  invoice_number?: string | null;
+  status: string;
+  subtotal?: number;
+  total: number;
+  customer?: Customer | null;
+  invoice_line_items?: InvoiceLineItem[];
+}
 
-  if (!res.ok) return notFound();
-  const json = await res.json();
-  const invoice = json.data;
+// ------------------------- //
+
+export default async function InvoiceDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const invoice: InvoiceDetail | null = await getInvoiceById(params.id);
 
   if (!invoice) return notFound();
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-2">Invoice {invoice.id}</h1>
-      <p className="text-gray-600 mb-8">View invoice details</p>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">
+        Invoice {invoice.invoice_number || invoice.id}
+      </h1>
 
-      <div className="bg-white p-6 rounded-xl border mb-10">
-        <div className="flex justify-between">
-          <div>
-            <p className="text-gray-600">Client</p>
-            <p className="text-lg font-semibold">{invoice.clients?.name ?? invoice.client_id}</p>
+      <div className="bg-white border p-4 rounded-xl">
+        <p>
+          <strong>Status:</strong> {invoice.status}
+        </p>
 
-            <p className="text-gray-600 mt-4">Invoice Date</p>
-            <p className="font-medium">{invoice.invoice_date}</p>
-          </div>
+        <p>
+          <strong>Subtotal:</strong> ${invoice.subtotal?.toFixed(2) ?? "0.00"}
+        </p>
 
-          <div className="text-right">
-            <div className={`px-4 py-2 rounded-full text-sm font-medium ${invoice.status === "paid" ? "bg-green-100 text-green-700" : invoice.status === "overdue" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
-              {invoice.status}
+        <p>
+          <strong>Total:</strong> ${invoice.total?.toFixed(2) ?? "0.00"}
+        </p>
+
+        <p>
+          <strong>Customer:</strong>{" "}
+          {invoice.customer?.name ?? "Unknown Customer"}
+          {invoice.customer?.email ? ` • ${invoice.customer.email}` : ""}
+          {invoice.customer?.phone ? ` • ${invoice.customer.phone}` : ""}
+        </p>
+
+        {/* Line Items */}
+        <h2 className="text-xl font-semibold mt-4">Line Items</h2>
+
+        {invoice.invoice_line_items?.length ? (
+          invoice.invoice_line_items.map((item: InvoiceLineItem) => (
+            <div
+              key={item.id}
+              className="border p-3 rounded mb-2 bg-gray-50"
+            >
+              <p className="font-medium">{item.description}</p>
+              <p className="text-gray-700">
+                {item.quantity} × ${item.unit_price} ={" "}
+                <strong>${item.line_total}</strong>
+              </p>
             </div>
-
-            <p className="text-gray-600 mt-4">Amount</p>
-            <p className="text-2xl font-bold">${invoice.total}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-xl border">
-        <h2 className="text-xl font-semibold mb-4">Line Items</h2>
-        <div className="space-y-4">
-          {invoice.invoice_line_items?.map((item: any) => (
-            <div key={item.id} className="flex justify-between p-4 border rounded-lg bg-gray-50">
-              <div>
-                <p className="font-semibold">{item.description}</p>
-                <p className="text-gray-600 text-sm">Qty: {item.quantity} × ${item.unit_price}</p>
-              </div>
-              <p className="font-semibold text-lg">${item.line_total}</p>
-            </div>
-          ))}
-        </div>
-        <div className="text-right mt-6 text-2xl font-bold">Total: ${invoice.total}</div>
+          ))
+        ) : (
+          <p>No line items found.</p>
+        )}
       </div>
     </div>
   );

@@ -1,37 +1,42 @@
-// web/app/api/invoices/route.ts
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
+import { createClient } from "@/lib/supabaseAdmin";
+import { getOrgIdForRequest } from "@/lib/org-server";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const url = new URL(req.url);
-    const page = Number(url.searchParams.get("page") ?? "1");
-    const per = Number(url.searchParams.get("per") ?? "10");
-    const sort = url.searchParams.get("sort") ?? "invoice_date";
-    const order = (url.searchParams.get("order") ?? "desc") as "asc" | "desc";
-    const status = url.searchParams.get("status") ?? undefined;
-    const clientId = url.searchParams.get("client") ?? undefined;
+    const org = await getOrgIdForRequest();
+    if (!org.ok) return NextResponse.json({ error: org.error }, { status: org.status });
 
-    const from = (page - 1) * per;
-    const to = from + per - 1;
+    const supabase = createClient();
 
-    let query = supabaseAdmin
+    const { data, error } = await supabase
       .from("invoices")
       .select(
-        `id, invoice_date, due_date, status, subtotal, tax_amount, discount_amount, total, client_id, created_at, clients(name)`
-      , { count: "exact" }) // count exact total
-      .order(sort, { ascending: order === "asc" })
-      .range(from, to);
+        `
+        id,
+        invoice_number,
+        status,
+        total,
+        created_at,
+        customer:customers (
+          id,
+          name
+        )
+      `
+      )
+      .eq("organization_id", org.orgId)
+      .order("created_at", { ascending: false });
 
-    if (status) query = query.eq("status", status);
-    if (clientId) query = query.eq("client_id", clientId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const { data, error, count } = await query;
-
-    if (error) return NextResponse.json({ error }, { status: 500 });
-
-    return NextResponse.json({ data, page, per, total: count ?? 0 });
-  } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    return NextResponse.json(
+      { invoices: data ?? [] },
+      { status: 200, headers: { "Cache-Control": "no-store" } }
+    );
+  } catch (e: any) {
+    return NextResponse.json({ error: e?.message ?? "Server error" }, { status: 500 });
   }
 }

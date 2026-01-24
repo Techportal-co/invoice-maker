@@ -1,170 +1,221 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { createInvoice } from "@/lib/db/createInvoice";
+import { getCustomers } from "@/lib/db/customers";
+
+interface LineItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  tax_rate: number;
+  line_total: number;
+}
 
 export default function NewInvoicePage() {
   const router = useRouter();
 
-  const [form, setForm] = useState({
-    organization_id: "",
-    client_id: "",
-    invoice_date: "",
-    due_date: "",
-    status: "pending",
-    currency: "USD",
-    notes: "",
-    terms_condition: "",
-  });
+  // ---- CUSTOMERS ----
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [customerId, setCustomerId] = useState("");
 
-  const [items, setItems] = useState([
-    { description: "", quantity: 1, unit_price: 0 },
+  useEffect(() => {
+    async function loadCustomers() {
+      const data = await getCustomers();
+      setCustomers(data?.customers || []);
+    }
+    loadCustomers();
+  }, []);
+
+  // ---- INVOICE FIELDS ----
+  const [invoiceDate, setInvoiceDate] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [terms, setTerms] = useState("");
+
+  // ---- LINE ITEMS ----
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { description: "", quantity: 1, unit_price: 0, tax_rate: 0, line_total: 0 },
   ]);
 
-  const handleItemChange = (i: number, field: string, value: any) => {
-    const newItems = [...items];
-    (newItems[i] as any)[field] = value;
-    setItems(newItems);
+  const addLineItem = () => {
+    setLineItems([
+      ...lineItems,
+      { description: "", quantity: 1, unit_price: 0, tax_rate: 0, line_total: 0 },
+    ]);
   };
 
-  const addItem = () =>
-    setItems([...items, { description: "", quantity: 1, unit_price: 0 }]);
+  const updateLineItem = (index: number, key: string, value: any) => {
+    const items = [...lineItems];
+    (items as any)[index][key] = value;
 
-  const removeItem = (i: number) =>
-    setItems(items.filter((_, index) => index !== i));
+    // recalc total for that row
+    items[index].line_total =
+      items[index].quantity * items[index].unit_price +
+      (items[index].quantity *
+        items[index].unit_price *
+        items[index].tax_rate) /
+        100;
 
-  const calculateSubtotal = () =>
-    items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+    setLineItems(items);
+  };
 
+  // ---- TOTALS ----
+  const subtotal = lineItems.reduce((sum, item) => sum + item.line_total, 0);
+  const total = subtotal; // (can expand later with tax/discount)
+
+  // ---- SUBMIT ----
   const handleSubmit = async () => {
-    const subtotal = calculateSubtotal();
-    const tax_amount = 0;
-    const discount_amount = 0;
-    const total = subtotal;
+    if (!customerId) {
+      alert("Please select a customer.");
+      return;
+    }
 
     const payload = {
-      ...form,
+      organization_id: "ORG-ID-HERE", // TEMP until auth is implemented
+      customer_id: customerId,
+      invoice_maker: "Saif",
+      invoice_date: invoiceDate,
+      due_date: dueDate,
+      status: "pending",
       subtotal,
-      tax_amount,
-      discount_amount,
+      tax_amount: 0,
+      discount_amount: 0,
       total,
-      items,
+      currency: "USD",
+      notes,
+      terms_condition: terms,
+      line_items: lineItems,
     };
 
-    const res = await fetch("/api/invoices/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    const res = await createInvoice(payload);
 
-    if (res.ok) {
-      router.push("/invoices");
+    if (res?.invoice?.id) {
+      router.push(`/invoices/${res.invoice.id}`);
     } else {
-      alert("Error creating invoice");
+      alert("Error creating invoice.");
+      console.log(res);
     }
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Create New Invoice</h1>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-semibold">Create Invoice</h1>
 
-      {/* INVOICE FORM */}
-      <div className="space-y-4 bg-white p-6 rounded-lg border">
+      {/* ---- MAIN FORM CARD ---- */}
+      <div className="bg-white border rounded-xl p-6 space-y-4">
 
+        {/* CUSTOMER DROPDOWN */}
         <div>
-          <label>Organization ID</label>
-          <input
-            value={form.organization_id}
-            onChange={(e) =>
-              setForm({ ...form, organization_id: e.target.value })
-            }
-            className="border p-2 w-full"
-          />
+          <label className="block mb-1 font-medium">Customer</label>
+          <select
+            className="border p-2 rounded w-full"
+            value={customerId}
+            onChange={(e) => setCustomerId(e.target.value)}
+          >
+            <option value="">Select a customer</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} {c.email ? `(${c.email})` : ""}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div>
-          <label>Client ID</label>
-          <input
-            value={form.client_id}
-            onChange={(e) => setForm({ ...form, client_id: e.target.value })}
-            className="border p-2 w-full"
-          />
+        {/* DATES */}
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <label>Invoice Date</label>
+            <input
+              type="date"
+              className="border p-2 rounded w-full"
+              value={invoiceDate}
+              onChange={(e) => setInvoiceDate(e.target.value)}
+            />
+          </div>
+
+          <div className="flex-1">
+            <label>Due Date</label>
+            <input
+              type="date"
+              className="border p-2 rounded w-full"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+            />
+          </div>
         </div>
 
-        <div>
-          <label>Invoice Date</label>
-          <input
-            type="date"
-            value={form.invoice_date}
-            onChange={(e) => setForm({ ...form, invoice_date: e.target.value })}
-            className="border p-2 w-full"
-          />
-        </div>
+        {/* ---- LINE ITEMS ---- */}
+        <h2 className="text-xl font-semibold">Line Items</h2>
 
-        <div>
-          <label>Due Date</label>
-          <input
-            type="date"
-            value={form.due_date}
-            onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-            className="border p-2 w-full"
-          />
-        </div>
-
-        {/* ITEMS */}
-        <h2 className="text-lg font-semibold mt-6">Line Items</h2>
-
-        {items.map((item, idx) => (
-          <div key={idx} className="border rounded p-4 mb-4">
-
+        {lineItems.map((item, index) => (
+          <div key={index} className="border p-4 rounded-xl space-y-2">
             <input
               placeholder="Description"
+              className="border p-2 rounded w-full"
               value={item.description}
               onChange={(e) =>
-                handleItemChange(idx, "description", e.target.value)
+                updateLineItem(index, "description", e.target.value)
               }
-              className="border p-2 w-full mb-2"
             />
 
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <input
                 type="number"
                 placeholder="Qty"
+                className="border p-2 rounded w-20"
                 value={item.quantity}
                 onChange={(e) =>
-                  handleItemChange(idx, "quantity", Number(e.target.value))
+                  updateLineItem(index, "quantity", Number(e.target.value))
                 }
-                className="border p-2"
               />
-
               <input
                 type="number"
                 placeholder="Unit Price"
+                className="border p-2 rounded w-32"
                 value={item.unit_price}
                 onChange={(e) =>
-                  handleItemChange(idx, "unit_price", Number(e.target.value))
+                  updateLineItem(index, "unit_price", Number(e.target.value))
                 }
-                className="border p-2"
+              />
+              <input
+                type="number"
+                placeholder="Tax %"
+                className="border p-2 rounded w-20"
+                value={item.tax_rate}
+                onChange={(e) =>
+                  updateLineItem(index, "tax_rate", Number(e.target.value))
+                }
               />
             </div>
 
-            <button
-              onClick={() => removeItem(idx)}
-              className="text-red-500 mt-2"
-            >
-              Remove Item
-            </button>
+            <p>
+              <strong>Line Total:</strong> ${item.line_total.toFixed(2)}
+            </p>
           </div>
         ))}
 
-        <button onClick={addItem} className="text-blue-600">
+        <button
+          onClick={addLineItem}
+          className="bg-gray-200 px-4 py-2 rounded"
+        >
           + Add Item
         </button>
+
+        {/* TOTALS */}
+        <h2 className="text-lg font-semibold mt-4">
+          Subtotal: ${subtotal.toFixed(2)}
+        </h2>
+
+        <h2 className="text-lg font-semibold">
+          Total: ${total.toFixed(2)}
+        </h2>
 
         {/* SUBMIT */}
         <button
           onClick={handleSubmit}
-          className="w-full mt-6 bg-black text-white py-2 rounded-lg"
+          className="bg-blue-600 text-white px-4 py-2 rounded w-full mt-4"
         >
           Create Invoice
         </button>

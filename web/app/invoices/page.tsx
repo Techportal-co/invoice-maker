@@ -1,90 +1,233 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { CheckCircle, Clock, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Invoice = {
   id: string;
-  client_id?: string;
-  clients?: { name?: string } | null;
-  total?: number;
-  invoice_date?: string;
-  status?: string;
+  invoice_number?: string | null;
+  status: string;
+  total: number;
+  customer?: { id: string; name: string | null } | null;
 };
 
-export default function InvoicesPageClient() {
+export default function InvoicesPage() {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [page, setPage] = useState(1);
-  const [per] = useState(6);
-  const [total, setTotal] = useState(0);
-  const [sortField, setSortField] = useState("invoice_date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [editing, setEditing] = useState<Invoice | null>(null);
+  const [form, setForm] = useState<{ status: string; invoice_number: string }>({
+    status: "",
+    invoice_number: "",
+  });
 
   useEffect(() => {
-    fetchInvoices();
-  }, [page, sortField, sortOrder]);
+    const load = async () => {
+      setError(null);
+      try {
+        const res = await fetch("/api/test/invoices", {
+          cache: "no-store",
+          credentials: "include",
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data?.error ?? "Failed to load invoices");
+          setInvoices([]);
+          return;
+        }
+        setInvoices(data?.invoices ?? []);
+      } catch (e: any) {
+        setError(e?.message ?? "Failed to load invoices");
+        setInvoices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  async function fetchInvoices() {
-    const res = await fetch(`/api/invoices?page=${page}&per=${per}&sort=${sortField}&order=${sortOrder}`);
-    const json = await res.json();
-    setInvoices(json.data ?? []);
-    setTotal(json.total ?? 0);
-  }
+  const onRefresh = () => startTransition(() => router.refresh());
 
-  const totalPages = Math.max(1, Math.ceil(total / per));
-
-  const statusColors: Record<string, string> = {
-    paid: "bg-green-100 text-green-700",
-    pending: "bg-yellow-100 text-yellow-700",
-    overdue: "bg-red-100 text-red-700",
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this invoice?")) return;
+    try {
+      const res = await fetch(`/api/test/invoices/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.error ?? "Failed to delete invoice");
+        return;
+      }
+      setInvoices((prev) => prev.filter((inv) => inv.id !== id));
+    } catch (e: any) {
+      alert(e?.message ?? "Failed to delete invoice");
+    }
   };
 
-  const statusIcons: Record<string, React.ReactNode> = {
-    paid: <CheckCircle size={18} className="text-green-700" />,
-    pending: <Clock size={18} className="text-yellow-700" />,
-    overdue: <AlertTriangle size={18} className="text-red-700" />,
+  const openEdit = (invoice: Invoice) => {
+    setEditing(invoice);
+    setForm({
+      status: invoice.status ?? "",
+      invoice_number: invoice.invoice_number ?? "",
+    });
+  };
+
+  const closeEdit = () => {
+    setEditing(null);
+    setForm({ status: "", invoice_number: "" });
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    if (!form.status.trim()) {
+      alert("Status is required");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/test/invoices/${editing.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: form.status.trim(),
+          invoice_number: form.invoice_number.trim() || null,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.error ?? "Failed to update invoice");
+        return;
+      }
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === editing.id
+            ? {
+                ...inv,
+                status: form.status.trim(),
+                invoice_number: form.invoice_number.trim() || inv.invoice_number,
+              }
+            : inv
+        )
+      );
+      closeEdit();
+    } catch (e: any) {
+      alert(e?.message ?? "Failed to update invoice");
+    }
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Invoices</h1>
-        <Link href="/invoices/new" className="bg-blue-600 text-white px-5 py-2 rounded-lg">+ New Invoice</Link>
-      </div>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Invoices</h1>
 
-      <div className="flex gap-3 mb-4">
-        <button onClick={() => { setSortField("invoice_date"); setSortOrder((o) => o === "asc" ? "desc" : "asc"); }} className="border px-3 py-1 rounded">Sort by Date</button>
-        <button onClick={() => { setSortField("total"); setSortOrder((o) => o === "asc" ? "desc" : "asc"); }} className="border px-3 py-1 rounded">Sort by Amount</button>
-        <button onClick={() => { setSortField("status"); setSortOrder((o) => o === "asc" ? "desc" : "asc"); }} className="border px-3 py-1 rounded">Sort by Status</button>
-      </div>
-
-      <div className="bg-white border rounded-xl p-6 space-y-4">
-        {invoices.map((inv) => (
-          <Link key={inv.id} href={`/invoices/${inv.id}`} className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition">
-            <div>
-              <p className="font-semibold">{inv.id}</p>
-              <p className="text-gray-500">{inv.clients?.name ?? inv.client_id}</p>
-            </div>
-
-            <span className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusColors[inv.status ?? "pending"]}`}>
-              {statusIcons[inv.status ?? "pending"]}
-              {inv.status ?? "pending"}
-            </span>
-
-            <div className="text-right">
-              <p className="font-semibold">${(inv.total ?? 0).toFixed(2)}</p>
-              <p className="text-gray-500 text-sm">{inv.invoice_date}</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onRefresh}
+            className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-50"
+            disabled={isPending}
+          >
+            {isPending ? "Refreshing..." : "Refresh"}
+          </button>
+          <Link
+            href="/invoices/create"
+            className="px-4 py-2 rounded-md bg-black text-white text-sm font-medium"
+          >
+            + Create Invoice
           </Link>
-        ))}
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mt-6">
-        <button disabled={page === 1} onClick={() => setPage((p) => Math.max(1, p-1))} className="px-3 py-2 border rounded disabled:opacity-50">Prev</button>
-        <div>Page {page} / {totalPages}</div>
-        <button disabled={page === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p+1))} className="px-3 py-2 border rounded disabled:opacity-50">Next</button>
+      <div className="bg-white border rounded-xl p-6">
+        {loading ? (
+          <p className="text-gray-500 text-center py-8">Loading...</p>
+        ) : error ? (
+          <div className="border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded">
+            {error}
+          </div>
+        ) : invoices.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No invoices found.</p>
+        ) : (
+          <div className="space-y-4">
+            {invoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition"
+              >
+                <div className="flex flex-col">
+                  <Link
+                    href={`/invoices/${invoice.id}`}
+                    className="font-medium hover:underline"
+                  >
+                    {invoice.invoice_number || invoice.id}
+                  </Link>
+                  <span className="text-sm text-gray-600">
+                    {invoice.customer?.name ?? "Unknown Customer"}
+                  </span>
+                </div>
+                <span className="text-gray-600">{invoice.status}</span>
+                <span>${invoice.total}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    className="text-xs text-blue-600 hover:underline"
+                    onClick={() => openEdit(invoice)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="text-xs text-red-600 hover:underline"
+                    onClick={() => handleDelete(invoice.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+      {editing && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 space-y-4">
+            <h2 className="text-xl font-semibold">Edit Invoice</h2>
+            <div className="space-y-3">
+              <label className="text-sm space-y-1 block">
+                <span className="font-medium">Invoice Number</span>
+                <input
+                  className="border rounded px-3 py-2 w-full"
+                  value={form.invoice_number}
+                  onChange={(e) => setForm({ ...form, invoice_number: e.target.value })}
+                  placeholder={editing.invoice_number ?? ""}
+                />
+              </label>
+              <label className="text-sm space-y-1 block">
+                <span className="font-medium">Status*</span>
+                <input
+                  className="border rounded px-3 py-2 w-full"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  placeholder="draft"
+                />
+              </label>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button className="px-4 py-2 rounded border text-sm" onClick={closeEdit}>
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-black text-white text-sm"
+                onClick={saveEdit}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
