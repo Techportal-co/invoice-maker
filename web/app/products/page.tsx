@@ -202,7 +202,6 @@ export default function ProductsPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-3 py-2 text-left">ID</th>
                 <th className="px-3 py-2 text-left">Name</th>
                 <th className="px-3 py-2 text-left">SKU</th>
                 <th className="px-3 py-2 text-left">Category</th>
@@ -217,7 +216,6 @@ export default function ProductsPage() {
             <tbody>
               {products.map((p) => (
                 <tr key={p.id} className="border-t">
-                  <td className="px-3 py-2 font-mono text-xs text-gray-600">{p.id}</td>
                   <td className="px-3 py-2 font-medium">{p.name}</td>
                   <td className="px-3 py-2">{p.sku ?? "-"}</td>
                   <td className="px-3 py-2">{p.category ?? "-"}</td>
