@@ -42,9 +42,17 @@ export default async function InvoiceDetailPage({
 
   return (
     <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">
-        Invoice {invoice.invoice_number || invoice.id}
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">
+          Invoice {invoice.invoice_number || invoice.id}
+        </h1>
+        <a
+          href={`/api/test/invoices/${invoice.id}/pdf`}
+          className="px-4 py-2 rounded-md bg-black text-white text-sm font-medium"
+        >
+          Download PDF
+        </a>
+      </div>
 
       <div className="bg-white border p-4 rounded-xl">
         <p>
