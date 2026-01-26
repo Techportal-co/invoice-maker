@@ -12,6 +12,35 @@ type Invoice = {
   customer?: { id: string; name: string | null } | null;
 };
 
+type InvoiceDetail = {
+  id: string;
+  invoice_number?: string | null;
+  status: string;
+  subtotal?: number | null;
+  tax_total?: number | null;
+  total: number;
+  created_at?: string | null;
+  customer?: {
+    id: string;
+    name: string | null;
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
+    postal_code?: string | null;
+  } | null;
+  invoice_line_items?: Array<{
+    id: string;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    tax_rate: number;
+    line_total: number;
+  }>;
+};
+
 export default function InvoicesPage() {
   const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -23,6 +52,9 @@ export default function InvoicesPage() {
     status: "",
     invoice_number: "",
   });
+  const [detail, setDetail] = useState<InvoiceDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -67,6 +99,34 @@ export default function InvoicesPage() {
     } catch (e: any) {
       alert(e?.message ?? "Failed to delete invoice");
     }
+  };
+
+  const openDetail = async (id: string) => {
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const res = await fetch(`/api/test/invoices/${id}`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.invoice) {
+        setDetailError(data?.error ?? "Failed to load invoice");
+        setDetail(null);
+      } else {
+        setDetail(data.invoice);
+      }
+    } catch (e: any) {
+      setDetailError(e?.message ?? "Failed to load invoice");
+      setDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeDetail = () => {
+    setDetail(null);
+    setDetailError(null);
   };
 
   const openEdit = (invoice: Invoice) => {
@@ -185,6 +245,12 @@ export default function InvoicesPage() {
                   </span>
                   <span>${invoice.total}</span>
                   <div className="flex items-center gap-2">
+                  <button
+                    className="text-xs text-gray-700 underline"
+                    onClick={() => openDetail(invoice.id)}
+                  >
+                    View
+                  </button>
                     <button
                       className="text-xs text-blue-600 hover:underline"
                       onClick={() => openEdit(invoice)}
@@ -204,6 +270,107 @@ export default function InvoicesPage() {
           </div>
         )}
       </div>
+      {detail && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl max-h-[90vh] overflow-auto p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">
+                  Invoice {detail.invoice_number || detail.id}
+                </h2>
+                <p className="text-sm text-gray-600">
+                  {detail.created_at
+                    ? new Date(detail.created_at).toLocaleString()
+                    : ""}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <a
+                  href={`/api/test/invoices/${detail.id}/pdf`}
+                  className="px-4 py-2 rounded-md bg-black text-white text-sm font-medium"
+                >
+                  Print / PDF
+                </a>
+                <button
+                  className="px-4 py-2 rounded border text-sm"
+                  onClick={closeDetail}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            {detailError && (
+              <div className="border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded">
+                {detailError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="space-y-1">
+                <p>
+                  <span className="font-semibold">Status:</span> {detail.status}
+                </p>
+                <p>
+                  <span className="font-semibold">Subtotal:</span>{" "}
+                  ${Number(detail.subtotal ?? 0).toFixed(2)}
+                </p>
+                <p>
+                  <span className="font-semibold">Tax:</span>{" "}
+                  ${Number(detail.tax_total ?? 0).toFixed(2)}
+                </p>
+                <p>
+                  <span className="font-semibold">Total:</span>{" "}
+                  ${Number(detail.total ?? 0).toFixed(2)}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold">Customer</p>
+                <p>{detail.customer?.name ?? "Unknown Customer"}</p>
+                {detail.customer?.email && <p>{detail.customer.email}</p>}
+                {detail.customer?.phone && <p>{detail.customer.phone}</p>}
+                {detail.customer && (
+                  <p className="text-gray-700">
+                    {[detail.customer.address, detail.customer.city, detail.customer.state]
+                      .filter(Boolean)
+                      .join(", ")}
+                    {detail.customer.country || detail.customer.postal_code
+                      ? ` ${[detail.customer.country, detail.customer.postal_code]
+                          .filter(Boolean)
+                          .join(" ")}`
+                      : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Line Items</h3>
+              {detail.invoice_line_items?.length ? (
+                <div className="space-y-2">
+                  {detail.invoice_line_items.map((li) => (
+                    <div key={li.id} className="border rounded p-3 text-sm bg-gray-50">
+                      <p className="font-medium">{li.description}</p>
+                      <p className="text-gray-700">
+                        Qty: {li.quantity} | Unit: ${li.unit_price.toFixed(2)} | Tax:{" "}
+                        {(li.tax_rate * 100).toFixed(2)}% | Line: $
+                        {li.line_total.toFixed(2)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">No line items.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {detailLoading && !detail && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-40">
+          <div className="bg-white rounded-lg shadow px-4 py-3 text-sm">Loading invoice…</div>
+        </div>
+      )}
       {editing && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 space-y-4">
