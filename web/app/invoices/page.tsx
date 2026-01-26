@@ -153,40 +153,54 @@ export default function InvoicesPage() {
           <p className="text-gray-500 text-center py-8">No invoices found.</p>
         ) : (
           <div className="space-y-4">
-            {invoices.map((invoice) => (
-              <div
-                key={invoice.id}
-                className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition"
-              >
-                <div className="flex flex-col">
-                  <Link
-                    href={`/invoices/${invoice.id}`}
-                    className="font-medium hover:underline"
+            {invoices.map((invoice) => {
+              const statusLower = (invoice.status || "").toLowerCase();
+              const isActive = !["draft", "void", "cancelled"].includes(statusLower);
+              const statusLabel = isActive ? "Active" : "Inactive";
+
+              return (
+                <div
+                  key={invoice.id}
+                  className="flex justify-between items-center p-3 border rounded-lg hover:bg-gray-50 transition"
+                >
+                  <div className="flex flex-col">
+                    <Link
+                      href={`/invoices/${invoice.id}`}
+                      className="font-medium hover:underline"
+                    >
+                      {invoice.invoice_number || invoice.id}
+                    </Link>
+                    <span className="text-sm text-gray-600">
+                      {invoice.customer?.name ?? "Unknown Customer"}
+                    </span>
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded border ${
+                      isActive
+                        ? "text-green-700 border-green-200 bg-green-50"
+                        : "text-gray-700 border-gray-200 bg-gray-50"
+                    }`}
                   >
-                    {invoice.invoice_number || invoice.id}
-                  </Link>
-                  <span className="text-sm text-gray-600">
-                    {invoice.customer?.name ?? "Unknown Customer"}
+                    {statusLabel}
                   </span>
+                  <span>${invoice.total}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="text-xs text-blue-600 hover:underline"
+                      onClick={() => openEdit(invoice)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="text-xs text-red-600 hover:underline"
+                      onClick={() => handleDelete(invoice.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <span className="text-gray-600">{invoice.status}</span>
-                <span>${invoice.total}</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    className="text-xs text-blue-600 hover:underline"
-                    onClick={() => openEdit(invoice)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="text-xs text-red-600 hover:underline"
-                    onClick={() => handleDelete(invoice.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
