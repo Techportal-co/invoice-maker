@@ -49,6 +49,15 @@ export async function POST(req: Request) {
       // product_id can be null/undefined if user typed a custom line item
       const product_id = li?.product_id ? String(li.product_id) : null;
 
+      // For inventory products, quantity must be an integer
+      if (product_id) {
+        if (!Number.isInteger(quantity)) {
+          throw new Error(
+            `Line item ${idx + 1}: quantity must be an integer for inventory products`
+          );
+        }
+      }
+
       return { product_id, description, quantity, unit_price, tax_rate };
     });
 
@@ -119,6 +128,38 @@ export async function POST(req: Request) {
       console.error("Line items insert error:", itemsError);
       await supabase.from("invoices").delete().eq("id", invoice.id);
       return NextResponse.json({ error: itemsError.message }, { status: 500 });
+    }
+
+    // Inventory deduction (only for rows with product_id)
+    try {
+      for (const li of normalizedItems) {
+        if (!li.product_id) continue;
+
+        const qty = Number(li.quantity);
+
+        const { error: invErr } = await supabase.rpc("decrement_inventory", {
+          p_org_id: org.orgId,
+          p_product_id: li.product_id,
+          p_qty: qty,
+        });
+
+        if (invErr) {
+          // rollback invoice + items if inventory fails
+          await supabase.from("invoice_line_items").delete().eq("invoice_id", invoice.id);
+          await supabase.from("invoices").delete().eq("id", invoice.id);
+
+          return NextResponse.json({ error: invErr.message }, { status: 400 });
+        }
+      }
+    } catch (e: any) {
+      // rollback safety
+      await supabase.from("invoice_line_items").delete().eq("invoice_id", invoice.id);
+      await supabase.from("invoices").delete().eq("id", invoice.id);
+
+      return NextResponse.json(
+        { error: e?.message ?? "Inventory deduction failed" },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({ invoice_id: invoice.id }, { status: 201 });
