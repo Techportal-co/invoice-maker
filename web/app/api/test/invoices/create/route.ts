@@ -98,6 +98,7 @@ export async function POST(req: Request) {
         invoice_number,
         invoice_date,
         subtotal,
+        tax_total,
         total,
         status: "draft",
       })
