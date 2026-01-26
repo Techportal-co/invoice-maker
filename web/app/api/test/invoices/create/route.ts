@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const client_id = body?.customer_id as string | undefined;
     const line_items = body?.line_items as LineItemInput[] | undefined;
 
-    if (!client_id) {
+    if (!client_id || client_id === "undefined") {
       return NextResponse.json(
         { error: "customer_id is required" },
         { status: 400 }
@@ -47,7 +47,9 @@ export async function POST(req: Request) {
       if (!Number.isFinite(tax_rate) || tax_rate < 0) throw new Error(`Line item ${idx + 1}: tax_rate must be >= 0`);
 
       // product_id can be null/undefined if user typed a custom line item
-      const product_id = li?.product_id ? String(li.product_id) : null;
+      const rawProduct = li?.product_id;
+      let product_id = rawProduct ? String(rawProduct) : null;
+      if (product_id === "undefined") product_id = null;
 
       // For inventory products, quantity must be an integer
       if (product_id) {
