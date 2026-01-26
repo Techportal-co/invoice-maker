@@ -201,12 +201,13 @@ export default function CustomersPage() {
             </thead>
 
             <tbody>
-              {customers.map((c) => {
+              {customers.map((c, idx) => {
                 const location = [c.city, c.state, c.country].filter(Boolean).join(", ");
+                const displayId = `CUST-${String(idx + 1).padStart(4, "0")}`;
 
                 return (
                   <tr key={c.id} className="border-t">
-                    <td className="px-3 py-2 font-mono text-xs text-gray-600">{c.id}</td>
+                    <td className="px-3 py-2 font-mono text-xs text-gray-600">{displayId}</td>
                     <td className="px-3 py-2 font-medium">{c.name}</td>
                     <td className="px-3 py-2">{c.email ?? "-"}</td>
                     <td className="px-3 py-2">{c.phone ?? "-"}</td>
