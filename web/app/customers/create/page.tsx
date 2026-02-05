@@ -19,7 +19,15 @@ export default function CreateCustomerPage() {
     website: "",
     address: "",
     billing_address: "",
+    billing_city: "",
+    billing_state: "",
+    billing_country: "",
+    billing_postal_code: "",
     shipping_address: "",
+    shipping_city: "",
+    shipping_state: "",
+    shipping_country: "",
+    shipping_postal_code: "",
     city: "",
     state: "",
     country: "",
@@ -28,9 +36,20 @@ export default function CreateCustomerPage() {
     notes: "",
     is_active: true,
   });
+  const [sameAsBilling, setSameAsBilling] = useState(false);
 
   const setValue = (key: keyof typeof form, value: any) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (sameAsBilling && key.startsWith("billing_")) {
+        const suffix = key.replace("billing_", "");
+        const shipKey = `shipping_${suffix}` as keyof typeof form;
+        if (shipKey in next) {
+          (next as any)[shipKey] = value;
+        }
+      }
+      return next;
+    });
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -55,7 +74,15 @@ export default function CreateCustomerPage() {
       "website",
       "address",
       "billing_address",
+      "billing_city",
+      "billing_state",
+      "billing_country",
+      "billing_postal_code",
       "shipping_address",
+      "shipping_city",
+      "shipping_state",
+      "shipping_country",
+      "shipping_postal_code",
       "city",
       "state",
       "country",
@@ -150,22 +177,12 @@ export default function CreateCustomerPage() {
           </div>
 
           <div className="space-y-1 md:col-span-2">
-            <label className="text-sm font-medium">Billing Address</label>
+            <label className="text-sm font-medium">Address</label>
             <textarea
               className="border rounded-md px-3 py-2 w-full min-h-[80px]"
-              value={form.billing_address}
-              onChange={(e) => setValue("billing_address", e.target.value)}
-              placeholder="Billing / invoice address"
-            />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-sm font-medium">Shipping Address</label>
-            <textarea
-              className="border rounded-md px-3 py-2 w-full min-h-[80px]"
-              value={form.shipping_address}
-              onChange={(e) => setValue("shipping_address", e.target.value)}
-              placeholder="Shipping address"
+              value={form.address}
+              onChange={(e) => setValue("address", e.target.value)}
+              placeholder="General address"
             />
           </div>
 
@@ -203,6 +220,123 @@ export default function CreateCustomerPage() {
               value={form.postal_code}
               onChange={(e) => setValue("postal_code", e.target.value)}
             />
+          </div>
+
+          <div className="md:col-span-2 border-t pt-4 space-y-2">
+            <h2 className="text-base font-semibold">Billing Address</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-sm font-medium">Billing Address</label>
+                <textarea
+                  className="border rounded-md px-3 py-2 w-full min-h-[80px]"
+                  value={form.billing_address}
+                  onChange={(e) => setValue("billing_address", e.target.value)}
+                  placeholder="Billing / invoice address"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">City</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.billing_city}
+                  onChange={(e) => setValue("billing_city", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">State</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.billing_state}
+                  onChange={(e) => setValue("billing_state", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Country</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.billing_country}
+                  onChange={(e) => setValue("billing_country", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Postal Code</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.billing_postal_code}
+                  onChange={(e) => setValue("billing_postal_code", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 border-t pt-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={sameAsBilling}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSameAsBilling(checked);
+                  if (checked) {
+                    setForm((prev) => ({
+                      ...prev,
+                      shipping_address: prev.billing_address,
+                      shipping_city: prev.billing_city,
+                      shipping_state: prev.billing_state,
+                      shipping_country: prev.billing_country,
+                      shipping_postal_code: prev.billing_postal_code,
+                    }));
+                  }
+                }}
+              />
+              <span className="text-sm text-gray-700">
+                Billing address same as shipping address
+              </span>
+            </div>
+            <h2 className="text-base font-semibold">Shipping Address</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-sm font-medium">Shipping Address</label>
+                <textarea
+                  className="border rounded-md px-3 py-2 w-full min-h-[80px]"
+                  value={form.shipping_address}
+                  onChange={(e) => setValue("shipping_address", e.target.value)}
+                  placeholder="Shipping address"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">City</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.shipping_city}
+                  onChange={(e) => setValue("shipping_city", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">State</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.shipping_state}
+                  onChange={(e) => setValue("shipping_state", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Country</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.shipping_country}
+                  onChange={(e) => setValue("shipping_country", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Postal Code</label>
+                <input
+                  className="border rounded-md px-3 py-2 w-full"
+                  value={form.shipping_postal_code}
+                  onChange={(e) => setValue("shipping_postal_code", e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           <div className="space-y-1">
