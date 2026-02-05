@@ -18,6 +18,8 @@ export default function CreateCustomerPage() {
     phone: "",
     website: "",
     address: "",
+    billing_address: "",
+    shipping_address: "",
     city: "",
     state: "",
     country: "",
@@ -52,6 +54,8 @@ export default function CreateCustomerPage() {
       "phone",
       "website",
       "address",
+      "billing_address",
+      "shipping_address",
       "city",
       "state",
       "country",
@@ -146,12 +150,22 @@ export default function CreateCustomerPage() {
           </div>
 
           <div className="space-y-1 md:col-span-2">
-            <label className="text-sm font-medium">Address</label>
+            <label className="text-sm font-medium">Billing Address</label>
             <textarea
               className="border rounded-md px-3 py-2 w-full min-h-[80px]"
-              value={form.address}
-              onChange={(e) => setValue("address", e.target.value)}
-              placeholder="Street address"
+              value={form.billing_address}
+              onChange={(e) => setValue("billing_address", e.target.value)}
+              placeholder="Billing / invoice address"
+            />
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-sm font-medium">Shipping Address</label>
+            <textarea
+              className="border rounded-md px-3 py-2 w-full min-h-[80px]"
+              value={form.shipping_address}
+              onChange={(e) => setValue("shipping_address", e.target.value)}
+              placeholder="Shipping address"
             />
           </div>
 

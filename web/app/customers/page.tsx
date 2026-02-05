@@ -11,6 +11,8 @@ type Customer = {
   email: string | null;
   phone: string | null;
   website: string | null;
+  billing_address?: string | null;
+  shipping_address?: string | null;
   city: string | null;
   state: string | null;
   country: string | null;
@@ -24,6 +26,8 @@ type CustomerForm = {
   phone: string;
   website: string;
   address: string;
+  billing_address: string;
+  shipping_address: string;
   city: string;
   state: string;
   country: string;
@@ -93,6 +97,8 @@ export default function CustomersPage() {
       phone: customer.phone ?? "",
       website: customer.website ?? "",
       address: (customer as any).address ?? "",
+      billing_address: (customer as any).billing_address ?? (customer as any).address ?? "",
+      shipping_address: (customer as any).shipping_address ?? "",
       city: customer.city ?? "",
       state: customer.state ?? "",
       country: customer.country ?? "",
@@ -120,6 +126,8 @@ export default function CustomersPage() {
       phone: form.phone.trim() || null,
       website: form.website.trim() || null,
       address: form.address.trim() || null,
+      billing_address: form.billing_address.trim() || null,
+      shipping_address: form.shipping_address.trim() || null,
       city: form.city.trim() || null,
       state: form.state.trim() || null,
       country: form.country.trim() || null,
@@ -190,10 +198,11 @@ export default function CustomersPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-3 py-2 text-left">ID</th>
-                <th className="px-3 py-2 text-left">Name</th>
+                <th className="px-3 py-2 text-left">Customer Name</th>
                 <th className="px-3 py-2 text-left">Email</th>
                 <th className="px-3 py-2 text-left">Phone</th>
-                <th className="px-3 py-2 text-left">Location</th>
+                <th className="px-3 py-2 text-left">Billing Address</th>
+                <th className="px-3 py-2 text-left">Shipping Address</th>
                 <th className="px-3 py-2 text-left">Status</th>
                 <th className="px-3 py-2 text-left">Created</th>
                 <th className="px-3 py-2 text-left">Actions</th>
@@ -202,7 +211,8 @@ export default function CustomersPage() {
 
             <tbody>
               {customers.map((c, idx) => {
-                const location = [c.city, c.state, c.country].filter(Boolean).join(", ");
+                const location = c.billing_address || [c.city, c.state, c.country].filter(Boolean).join(", ");
+                const shipping = c.shipping_address || "-";
                 const displayId = `CUST-${String(idx + 1).padStart(4, "0")}`;
 
                 return (
@@ -212,6 +222,7 @@ export default function CustomersPage() {
                     <td className="px-3 py-2">{c.email ?? "-"}</td>
                     <td className="px-3 py-2">{c.phone ?? "-"}</td>
                     <td className="px-3 py-2">{location || "-"}</td>
+                    <td className="px-3 py-2">{shipping}</td>
                     <td className="px-3 py-2">
                       <span className="text-xs px-2 py-1 rounded border">
                         {c.is_active ? "Active" : "Inactive"}
@@ -279,11 +290,19 @@ export default function CustomersPage() {
                 />
               </label>
               <label className="text-sm space-y-1 md:col-span-2">
-                <span className="font-medium">Address</span>
+                <span className="font-medium">Billing Address</span>
                 <input
                   className="border rounded px-3 py-2 w-full"
                   value={form.address}
                   onChange={(e) => setForm({ ...form, address: e.target.value })}
+                />
+              </label>
+              <label className="text-sm space-y-1 md:col-span-2">
+                <span className="font-medium">Shipping Address</span>
+                <input
+                  className="border rounded px-3 py-2 w-full"
+                  value={form.shipping_address}
+                  onChange={(e) => setForm({ ...form, shipping_address: e.target.value })}
                 />
               </label>
               <label className="text-sm space-y-1">

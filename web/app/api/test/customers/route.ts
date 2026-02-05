@@ -54,6 +54,8 @@ export async function POST(req: Request) {
       phone: body?.phone ?? null,
       website: body?.website ?? null,
       address: body?.address ?? null,
+      billing_address: body?.billing_address ?? null,
+      shipping_address: body?.shipping_address ?? null,
       city: body?.city ?? null,
       state: body?.state ?? null,
       country: body?.country ?? null,

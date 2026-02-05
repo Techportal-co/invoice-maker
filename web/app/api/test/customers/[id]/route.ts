@@ -43,6 +43,8 @@ export async function PATCH(
     "phone",
     "website",
     "address",
+    "billing_address",
+    "shipping_address",
     "city",
     "state",
     "country",
