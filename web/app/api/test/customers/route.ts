@@ -53,7 +53,6 @@ export async function POST(req: Request) {
       email: body?.email ?? null,
       phone: body?.phone ?? null,
       website: body?.website ?? null,
-      address: body?.address ?? null,
       billing_address: body?.billing_address ?? null,
       billing_city: body?.billing_city ?? null,
       billing_state: body?.billing_state ?? null,

@@ -42,7 +42,6 @@ export async function PATCH(
     "email",
     "phone",
     "website",
-    "address",
     "billing_address",
     "billing_city",
     "billing_state",

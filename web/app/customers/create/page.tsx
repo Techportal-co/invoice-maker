@@ -17,7 +17,6 @@ export default function CreateCustomerPage() {
     email: "",
     phone: "",
     website: "",
-    address: "",
     billing_address: "",
     billing_city: "",
     billing_state: "",
@@ -72,7 +71,6 @@ export default function CreateCustomerPage() {
       "email",
       "phone",
       "website",
-      "address",
       "billing_address",
       "billing_city",
       "billing_state",
@@ -173,52 +171,6 @@ export default function CreateCustomerPage() {
               value={form.website}
               onChange={(e) => setValue("website", e.target.value)}
               placeholder="https://acme.com"
-            />
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <label className="text-sm font-medium">Address</label>
-            <textarea
-              className="border rounded-md px-3 py-2 w-full min-h-[80px]"
-              value={form.address}
-              onChange={(e) => setValue("address", e.target.value)}
-              placeholder="General address"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">City</label>
-            <input
-              className="border rounded-md px-3 py-2 w-full"
-              value={form.city}
-              onChange={(e) => setValue("city", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">State</label>
-            <input
-              className="border rounded-md px-3 py-2 w-full"
-              value={form.state}
-              onChange={(e) => setValue("state", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Country</label>
-            <input
-              className="border rounded-md px-3 py-2 w-full"
-              value={form.country}
-              onChange={(e) => setValue("country", e.target.value)}
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Postal Code</label>
-            <input
-              className="border rounded-md px-3 py-2 w-full"
-              value={form.postal_code}
-              onChange={(e) => setValue("postal_code", e.target.value)}
             />
           </div>
 
