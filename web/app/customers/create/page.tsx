@@ -178,7 +178,7 @@ export default function CreateCustomerPage() {
             <h2 className="text-base font-semibold">Billing Address</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1 md:col-span-2">
-                <label className="text-sm font-medium">Billing Address</label>
+                <label className="text-sm font-medium">Address</label>
                 <textarea
                   className="border rounded-md px-3 py-2 w-full min-h-[80px]"
                   value={form.billing_address}
@@ -248,7 +248,7 @@ export default function CreateCustomerPage() {
             <h2 className="text-base font-semibold">Shipping Address</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1 md:col-span-2">
-                <label className="text-sm font-medium">Shipping Address</label>
+                <label className="text-sm font-medium">Address</label>
                 <textarea
                   className="border rounded-md px-3 py-2 w-full min-h-[80px]"
                   value={form.shipping_address}
