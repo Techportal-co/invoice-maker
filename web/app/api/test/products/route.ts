@@ -15,7 +15,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, organization_id, name, sku, category, unit_price, tax_type, quantity_on_hand, reorder_level, is_active, created_at"
+        "id, organization_id, name, sku, category, unit_price, tax_type, reorder_level, is_active, created_at"
       )
       .eq("organization_id", org.orgId)
       .order("created_at", { ascending: false });
@@ -48,19 +48,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "unit_price must be >= 0" }, { status: 400 });
     }
 
-    const quantity_on_hand =
-      body?.quantity_on_hand === "" || body?.quantity_on_hand === undefined
-        ? 0
-        : Number(body?.quantity_on_hand);
-
     const reorder_level =
       body?.reorder_level === "" || body?.reorder_level === undefined
         ? 0
         : Number(body?.reorder_level);
 
-    if (!Number.isFinite(quantity_on_hand) || quantity_on_hand < 0) {
-      return NextResponse.json({ error: "quantity_on_hand must be >= 0" }, { status: 400 });
-    }
     if (!Number.isFinite(reorder_level) || reorder_level < 0) {
       return NextResponse.json({ error: "reorder_level must be >= 0" }, { status: 400 });
     }
@@ -73,7 +65,7 @@ export async function POST(req: Request) {
       category: body?.category ? String(body.category) : null,
       unit_price,
       tax_type: body?.tax_type ? String(body.tax_type) : null,
-      quantity_on_hand,
+      quantity_on_hand: 0,
       reorder_level,
       is_active: typeof body?.is_active === "boolean" ? body.is_active : true,
     };

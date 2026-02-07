@@ -44,7 +44,6 @@ export async function PATCH(
     "category",
     "unit_price",
     "tax_type",
-    "quantity_on_hand",
     "reorder_level",
     "is_active",
   ];

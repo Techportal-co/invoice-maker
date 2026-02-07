@@ -16,7 +16,6 @@ export default function CreateProductPage() {
     category: "",
     unit_price: "0", // sales price
     tax_type: "", // selected from dropdown
-    quantity_on_hand: "0",
     reorder_level: "0",
     is_active: true,
   });
@@ -36,15 +35,10 @@ export default function CreateProductPage() {
     }
 
     const unit_price = Number(form.unit_price);
-    const quantity_on_hand = Number(form.quantity_on_hand);
     const reorder_level = Number(form.reorder_level);
 
     if (!Number.isFinite(unit_price) || unit_price < 0) {
       setErrorMsg("Sales price must be a number >= 0.");
-      return;
-    }
-    if (!Number.isFinite(quantity_on_hand) || quantity_on_hand < 0) {
-      setErrorMsg("Quantity on hand must be a number >= 0.");
       return;
     }
     if (!Number.isFinite(reorder_level) || reorder_level < 0) {
@@ -56,7 +50,7 @@ export default function CreateProductPage() {
       name,
       unit_price,
       tax_type: form.tax_type.trim() || null,
-      quantity_on_hand,
+      quantity_on_hand: 0,
       reorder_level,
       is_active: form.is_active,
     };
@@ -170,17 +164,6 @@ export default function CreateProductPage() {
               <option value="zero">Zero</option>
               <option value="exempt">Exempt</option>
             </select>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Quantity On Hand</label>
-            <input
-              type="number"
-              step="1"
-              className="border rounded-md px-3 py-2 w-full"
-              value={form.quantity_on_hand}
-              onChange={(e) => setValue("quantity_on_hand", e.target.value)}
-            />
           </div>
 
           <div className="space-y-1">
