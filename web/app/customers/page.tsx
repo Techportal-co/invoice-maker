@@ -12,12 +12,25 @@ type Customer = {
   phone: string | null;
   website: string | null;
   billing_address?: string | null;
+  billing_city?: string | null;
+  billing_state?: string | null;
+  billing_country?: string | null;
+  billing_postal_code?: string | null;
   shipping_address?: string | null;
+  shipping_city?: string | null;
+  shipping_state?: string | null;
+  shipping_country?: string | null;
+  shipping_postal_code?: string | null;
   city: string | null;
   state: string | null;
   country: string | null;
   is_active: boolean;
   created_at: string | null;
+};
+
+type CustomerDetail = Customer & {
+  tax_id?: string | null;
+  notes?: string | null;
 };
 
 type CustomerForm = {
@@ -45,6 +58,9 @@ export default function CustomersPage() {
   const [isPending, startTransition] = useTransition();
   const [editing, setEditing] = useState<Customer | null>(null);
   const [form, setForm] = useState<CustomerForm | null>(null);
+  const [detail, setDetail] = useState<CustomerDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -87,6 +103,34 @@ export default function CustomersPage() {
     } catch (e: any) {
       alert(e?.message ?? "Failed to delete customer");
     }
+  };
+
+  const openDetail = async (id: string) => {
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const res = await fetch(`/api/test/customers/${id}`, {
+        cache: "no-store",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.customer) {
+        setDetailError(data?.error ?? "Failed to load customer");
+        setDetail(null);
+      } else {
+        setDetail(data.customer);
+      }
+    } catch (e: any) {
+      setDetailError(e?.message ?? "Failed to load customer");
+      setDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeDetail = () => {
+    setDetail(null);
+    setDetailError(null);
   };
 
   const openEdit = (customer: Customer) => {
@@ -218,16 +262,7 @@ export default function CustomersPage() {
                 return (
                   <tr key={c.id} className="border-t">
                     <td className="px-3 py-2 font-mono text-xs text-gray-600">{displayId}</td>
-                  <td className="px-3 py-2 font-medium">
-                    <Link
-                      href={`/customers/${c.id}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="hover:underline"
-                    >
-                      {c.name}
-                    </Link>
-                  </td>
+                    <td className="px-3 py-2 font-medium">{c.name}</td>
                     <td className="px-3 py-2">{c.email ?? "-"}</td>
                     <td className="px-3 py-2">{c.phone ?? "-"}</td>
                     <td className="px-3 py-2">{location || "-"}</td>
@@ -241,6 +276,12 @@ export default function CustomersPage() {
                       {c.created_at ? new Date(c.created_at).toLocaleDateString() : "-"}
                     </td>
                     <td className="px-3 py-2 space-x-2">
+                    <button
+                      className="text-xs text-gray-700 underline"
+                      onClick={() => openDetail(c.id)}
+                    >
+                      View
+                    </button>
                       <button
                         className="text-xs text-blue-600 hover:underline"
                         onClick={() => openEdit(c)}
@@ -385,6 +426,92 @@ export default function CustomersPage() {
                 Save
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {detail && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-auto p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">{detail.name}</h2>
+                <p className="text-sm text-gray-600">
+                  {detail.email || "-"} {detail.phone ? `• ${detail.phone}` : ""}
+                </p>
+              </div>
+              <button className="px-4 py-2 rounded border text-sm" onClick={closeDetail}>
+                Close
+              </button>
+            </div>
+
+            {detailError && (
+              <div className="border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded">
+                {detailError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="space-y-1">
+                <p>
+                  <span className="font-semibold">Website:</span>{" "}
+                  {detail.website || "-"}
+                </p>
+                <p>
+                  <span className="font-semibold">Status:</span>{" "}
+                  {detail.is_active ? "Active" : "Inactive"}
+                </p>
+                <p>
+                  <span className="font-semibold">Created:</span>{" "}
+                  {detail.created_at
+                    ? new Date(detail.created_at).toLocaleString()
+                    : "-"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p>
+                  <span className="font-semibold">Tax ID:</span>{" "}
+                  {(detail as any).tax_id || "-"}
+                </p>
+                <p>
+                  <span className="font-semibold">Notes:</span>{" "}
+                  {(detail as any).notes || "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold">Billing Address</h3>
+                <p>{detail.billing_address || "-"}</p>
+                <p>
+                  {[detail.billing_city, detail.billing_state].filter(Boolean).join(", ")}
+                </p>
+                <p>
+                  {[detail.billing_country, detail.billing_postal_code]
+                    .filter(Boolean)
+                    .join(" ")}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-semibold">Shipping Address</h3>
+                <p>{detail.shipping_address || "-"}</p>
+                <p>
+                  {[detail.shipping_city, detail.shipping_state].filter(Boolean).join(", ")}
+                </p>
+                <p>
+                  {[detail.shipping_country, detail.shipping_postal_code]
+                    .filter(Boolean)
+                    .join(" ")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {detailLoading && !detail && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-40">
+          <div className="bg-white rounded-lg shadow px-4 py-3 text-sm">
+            Loading customer…
           </div>
         </div>
       )}
