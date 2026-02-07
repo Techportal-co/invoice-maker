@@ -218,7 +218,16 @@ export default function CustomersPage() {
                 return (
                   <tr key={c.id} className="border-t">
                     <td className="px-3 py-2 font-mono text-xs text-gray-600">{displayId}</td>
-                    <td className="px-3 py-2 font-medium">{c.name}</td>
+                  <td className="px-3 py-2 font-medium">
+                    <Link
+                      href={`/customers/${c.id}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:underline"
+                    >
+                      {c.name}
+                    </Link>
+                  </td>
                     <td className="px-3 py-2">{c.email ?? "-"}</td>
                     <td className="px-3 py-2">{c.phone ?? "-"}</td>
                     <td className="px-3 py-2">{location || "-"}</td>
