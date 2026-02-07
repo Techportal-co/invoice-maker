@@ -8,6 +8,7 @@ type Product = {
   id: string;
   name: string;
   product_number?: string | null;
+  product_group?: string | null;
   sku: string | null;
   category: string | null;
   unit?: string | null;
@@ -22,6 +23,7 @@ type Product = {
 type ProductForm = {
   name: string;
   product_number: string;
+  product_group: string;
   description: string;
   sku: string;
   category: string;
@@ -90,6 +92,7 @@ export default function ProductsPage() {
     setForm({
       name: product.name ?? "",
       product_number: (product as any).product_number ?? "",
+      product_group: (product as any).product_group ?? "",
       description: (product as any).description ?? "",
       sku: product.sku ?? "",
       category: product.category ?? "",
@@ -129,6 +132,7 @@ export default function ProductsPage() {
     const payload = {
       name: form.name.trim(),
       product_number: form.product_number.trim() || null,
+      product_group: form.product_group.trim() || null,
       description: form.description.trim() || null,
       sku: form.sku.trim() || null,
       category: form.category.trim() || null,
@@ -203,11 +207,11 @@ export default function ProductsPage() {
               <tr>
                 <th className="px-3 py-2 text-left">Name</th>
                 <th className="px-3 py-2 text-left">Product #</th>
+                <th className="px-3 py-2 text-left">Product Group</th>
                 <th className="px-3 py-2 text-left">SKU</th>
                 <th className="px-3 py-2 text-left">Category</th>
                 <th className="px-3 py-2 text-left">Unit</th>
                 <th className="px-3 py-2 text-right">Sales Price</th>
-                <th className="px-3 py-2 text-left">Unit</th>
                 <th className="px-3 py-2 text-left">Tax Type</th>
                 <th className="px-3 py-2 text-left">Service</th>
                 <th className="px-3 py-2 text-left">Status</th>
@@ -220,6 +224,7 @@ export default function ProductsPage() {
                 <tr key={p.id} className="border-t">
                   <td className="px-3 py-2 font-medium">{p.name}</td>
                   <td className="px-3 py-2">{(p as any).product_number ?? "-"}</td>
+                  <td className="px-3 py-2">{(p as any).product_group ?? "-"}</td>
                   <td className="px-3 py-2">{p.sku ?? "-"}</td>
                   <td className="px-3 py-2">{p.category ?? "-"}</td>
                   <td className="px-3 py-2">{(p as any).unit ?? "-"}</td>
@@ -275,6 +280,15 @@ export default function ProductsPage() {
                   value={form.product_number}
                   onChange={(e) => setForm({ ...form!, product_number: e.target.value })}
                   placeholder="Internal ref"
+                />
+              </label>
+              <label className="text-sm space-y-1">
+                <span className="font-medium">Product Group</span>
+                <input
+                  className="border rounded px-3 py-2 w-full"
+                  value={form.product_group}
+                  onChange={(e) => setForm({ ...form!, product_group: e.target.value })}
+                  placeholder="Group / collection"
                 />
               </label>
               <label className="text-sm space-y-1">

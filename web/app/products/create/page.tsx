@@ -12,6 +12,7 @@ export default function CreateProductPage() {
   const [form, setForm] = useState({
     name: "",
     product_number: "",
+    product_group: "",
     description: "",
     sku: "",
     category: "",
@@ -52,6 +53,7 @@ export default function CreateProductPage() {
     const payload: Record<string, any> = {
       name,
       product_number: form.product_number.trim() || null,
+      product_group: form.product_group.trim() || null,
       unit: form.unit.trim() || null,
       unit_price,
       tax_type: form.tax_type.trim() || null,
@@ -123,6 +125,16 @@ export default function CreateProductPage() {
               value={form.product_number}
               onChange={(e) => setValue("product_number", e.target.value)}
               placeholder="Internal ref"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Product Group</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.product_group}
+              onChange={(e) => setValue("product_group", e.target.value)}
+              placeholder="Group / collection"
             />
           </div>
 

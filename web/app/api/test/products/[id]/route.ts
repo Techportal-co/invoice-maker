@@ -40,6 +40,7 @@ export async function PATCH(
   const allowed = [
     "name",
     "product_number",
+    "product_group",
     "description",
     "sku",
     "category",
