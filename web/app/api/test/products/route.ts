@@ -15,7 +15,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, organization_id, name, sku, category, unit_price, tax_type, reorder_level, is_active, created_at"
+        "id, organization_id, name, product_number, sku, category, unit, unit_price, tax_type, reorder_level, is_active, created_at"
       )
       .eq("organization_id", org.orgId)
       .order("created_at", { ascending: false });
@@ -60,9 +60,11 @@ export async function POST(req: Request) {
     const payload = {
       organization_id: org.orgId,
       name,
+      product_number: body?.product_number ? String(body.product_number) : null,
       description: body?.description ? String(body.description) : null,
       sku: body?.sku ? String(body.sku) : null,
       category: body?.category ? String(body.category) : null,
+      unit: body?.unit ? String(body.unit) : null,
       unit_price,
       tax_type: body?.tax_type ? String(body.tax_type) : null,
       quantity_on_hand: 0,

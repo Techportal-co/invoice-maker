@@ -39,9 +39,11 @@ export async function PATCH(
   const updates: Record<string, any> = {};
   const allowed = [
     "name",
+    "product_number",
     "description",
     "sku",
     "category",
+    "unit",
     "unit_price",
     "tax_type",
     "reorder_level",

@@ -11,9 +11,11 @@ export default function CreateProductPage() {
 
   const [form, setForm] = useState({
     name: "",
+    product_number: "",
     description: "",
     sku: "",
     category: "",
+    unit: "",
     unit_price: "0", // sales price
     tax_type: "", // selected from dropdown
     reorder_level: "0",
@@ -48,6 +50,8 @@ export default function CreateProductPage() {
 
     const payload: Record<string, any> = {
       name,
+      product_number: form.product_number.trim() || null,
+      unit: form.unit.trim() || null,
       unit_price,
       tax_type: form.tax_type.trim() || null,
       quantity_on_hand: 0,
@@ -107,6 +111,26 @@ export default function CreateProductPage() {
               value={form.name}
               onChange={(e) => setValue("name", e.target.value)}
               placeholder="Website Design"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Product Number</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.product_number}
+              onChange={(e) => setValue("product_number", e.target.value)}
+              placeholder="Internal ref"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Unit of Measure</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.unit}
+              onChange={(e) => setValue("unit", e.target.value)}
+              placeholder="e.g., pcs, kg, hr"
             />
           </div>
 

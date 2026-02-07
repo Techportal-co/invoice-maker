@@ -7,8 +7,10 @@ import { useRouter } from "next/navigation";
 type Product = {
   id: string;
   name: string;
+  product_number?: string | null;
   sku: string | null;
   category: string | null;
+  unit?: string | null;
   unit_price: number; // treated as sales price
   tax_type?: string | null;
   reorder_level: number;
@@ -18,9 +20,11 @@ type Product = {
 
 type ProductForm = {
   name: string;
+  product_number: string;
   description: string;
   sku: string;
   category: string;
+  unit: string;
   unit_price: string; // sales price
   tax_type: string;
   reorder_level: string;
@@ -83,9 +87,11 @@ export default function ProductsPage() {
     setEditing(product);
     setForm({
       name: product.name ?? "",
+      product_number: (product as any).product_number ?? "",
       description: (product as any).description ?? "",
       sku: product.sku ?? "",
       category: product.category ?? "",
+      unit: (product as any).unit ?? "",
       unit_price: String(product.unit_price ?? ""),
       tax_type: (product as any).tax_type ?? "",
       reorder_level: String(product.reorder_level ?? ""),
@@ -119,9 +125,11 @@ export default function ProductsPage() {
 
     const payload = {
       name: form.name.trim(),
+      product_number: form.product_number.trim() || null,
       description: form.description.trim() || null,
       sku: form.sku.trim() || null,
       category: form.category.trim() || null,
+      unit: form.unit.trim() || null,
       unit_price,
       tax_type: form.tax_type.trim() || null,
       quantity_on_hand: 0,
@@ -190,8 +198,10 @@ export default function ProductsPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-3 py-2 text-left">Name</th>
+                <th className="px-3 py-2 text-left">Product #</th>
                 <th className="px-3 py-2 text-left">SKU</th>
                 <th className="px-3 py-2 text-left">Category</th>
+                <th className="px-3 py-2 text-left">Unit</th>
                 <th className="px-3 py-2 text-right">Sales Price</th>
                 <th className="px-3 py-2 text-left">Tax Type</th>
                 <th className="px-3 py-2 text-left">Status</th>
@@ -203,8 +213,10 @@ export default function ProductsPage() {
               {products.map((p) => (
                 <tr key={p.id} className="border-t">
                   <td className="px-3 py-2 font-medium">{p.name}</td>
+                  <td className="px-3 py-2">{(p as any).product_number ?? "-"}</td>
                   <td className="px-3 py-2">{p.sku ?? "-"}</td>
                   <td className="px-3 py-2">{p.category ?? "-"}</td>
+                  <td className="px-3 py-2">{(p as any).unit ?? "-"}</td>
                   <td className="px-3 py-2 text-right">
                     {Number(p.unit_price).toFixed(2)}
                   </td>
@@ -245,6 +257,24 @@ export default function ProductsPage() {
                   className="border rounded px-3 py-2 w-full"
                   value={form.name}
                   onChange={(e) => setForm({ ...form!, name: e.target.value })}
+                />
+              </label>
+              <label className="text-sm space-y-1">
+                <span className="font-medium">Product Number</span>
+                <input
+                  className="border rounded px-3 py-2 w-full"
+                  value={form.product_number}
+                  onChange={(e) => setForm({ ...form!, product_number: e.target.value })}
+                  placeholder="Internal ref"
+                />
+              </label>
+              <label className="text-sm space-y-1">
+                <span className="font-medium">Unit of Measure</span>
+                <input
+                  className="border rounded px-3 py-2 w-full"
+                  value={form.unit}
+                  onChange={(e) => setForm({ ...form!, unit: e.target.value })}
+                  placeholder="e.g., pcs, kg, hr"
                 />
               </label>
               <label className="text-sm space-y-1">
