@@ -9,7 +9,7 @@ type Product = {
   name: string;
   sku: string | null;
   category: string | null;
-  unit_price: number;
+  unit_price: number; // treated as sales price
   tax_rate: number;
   quantity_on_hand: number;
   reorder_level: number;
@@ -22,7 +22,7 @@ type ProductForm = {
   description: string;
   sku: string;
   category: string;
-  unit_price: string;
+  unit_price: string; // sales price
   tax_rate_percent: string;
   quantity_on_hand: string;
   reorder_level: string;
@@ -114,7 +114,7 @@ export default function ProductsPage() {
     const reorder_level = Number(form.reorder_level);
 
     if (!Number.isFinite(unit_price) || unit_price < 0) {
-      alert("Unit price must be a number >= 0");
+      alert("Sales price must be a number >= 0");
       return;
     }
     if (!Number.isFinite(tax_rate) || tax_rate < 0) {
@@ -205,7 +205,7 @@ export default function ProductsPage() {
                 <th className="px-3 py-2 text-left">Name</th>
                 <th className="px-3 py-2 text-left">SKU</th>
                 <th className="px-3 py-2 text-left">Category</th>
-                <th className="px-3 py-2 text-right">Unit Price</th>
+                <th className="px-3 py-2 text-right">Sales Price</th>
                 <th className="px-3 py-2 text-right">Tax %</th>
                 <th className="px-3 py-2 text-right">On Hand</th>
                 <th className="px-3 py-2 text-left">Status</th>
@@ -289,7 +289,7 @@ export default function ProductsPage() {
                 />
               </label>
               <label className="text-sm space-y-1">
-                <span className="font-medium">Unit Price</span>
+                <span className="font-medium">Sales Price</span>
                 <input
                   type="number"
                   step="0.01"

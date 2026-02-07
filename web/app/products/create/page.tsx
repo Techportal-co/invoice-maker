@@ -14,7 +14,7 @@ export default function CreateProductPage() {
     description: "",
     sku: "",
     category: "",
-    unit_price: "0",
+    unit_price: "0", // sales price
     tax_rate_percent: "0", // user enters % in UI
     quantity_on_hand: "0",
     reorder_level: "0",
@@ -41,7 +41,7 @@ export default function CreateProductPage() {
     const reorder_level = Number(form.reorder_level);
 
     if (!Number.isFinite(unit_price) || unit_price < 0) {
-      setErrorMsg("Unit price must be a number >= 0.");
+      setErrorMsg("Sales price must be a number >= 0.");
       return;
     }
     if (!Number.isFinite(tax_rate) || tax_rate < 0) {
@@ -152,7 +152,7 @@ export default function CreateProductPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium">Unit Price</label>
+            <label className="text-sm font-medium">Sales Price</label>
             <input
               type="number"
               step="0.01"
