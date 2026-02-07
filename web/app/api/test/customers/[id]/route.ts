@@ -39,6 +39,8 @@ export async function PATCH(
   const updates: Record<string, any> = {};
   const allowed = [
     "name",
+    "contact_first_name",
+    "contact_last_name",
     "email",
     "phone",
     "website",

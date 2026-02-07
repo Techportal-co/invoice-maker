@@ -50,6 +50,8 @@ export async function POST(req: Request) {
     const payload = {
       organization_id: org.orgId, // ✅ ALWAYS set automatically
       name,
+      contact_first_name: body?.contact_first_name ?? null,
+      contact_last_name: body?.contact_last_name ?? null,
       email: body?.email ?? null,
       phone: body?.phone ?? null,
       website: body?.website ?? null,

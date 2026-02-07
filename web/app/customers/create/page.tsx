@@ -14,6 +14,8 @@ export default function CreateCustomerPage() {
   // organization_id will be handled later in Step 7 (auth/orgs)
   const [form, setForm] = useState({
     name: "",
+    contact_first_name: "",
+    contact_last_name: "",
     email: "",
     phone: "",
     website: "",
@@ -68,6 +70,8 @@ export default function CreateCustomerPage() {
     };
 
     const optionalKeys: (keyof typeof form)[] = [
+      "contact_first_name",
+      "contact_last_name",
       "email",
       "phone",
       "website",
@@ -151,6 +155,26 @@ export default function CreateCustomerPage() {
               onChange={(e) => setValue("email", e.target.value)}
               type="email"
               placeholder="billing@acme.com"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Contact First Name</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.contact_first_name}
+              onChange={(e) => setValue("contact_first_name", e.target.value)}
+              placeholder="Jane"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Contact Last Name</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.contact_last_name}
+              onChange={(e) => setValue("contact_last_name", e.target.value)}
+              placeholder="Doe"
             />
           </div>
 

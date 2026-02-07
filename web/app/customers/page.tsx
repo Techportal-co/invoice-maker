@@ -8,6 +8,8 @@ type Customer = {
   id: string;
   organization_id: string | null;
   name: string;
+  contact_first_name?: string | null;
+  contact_last_name?: string | null;
   email: string | null;
   phone: string | null;
   website: string | null;
@@ -31,6 +33,10 @@ type Customer = {
 type CustomerDetail = Customer & {
   tax_id?: string | null;
   notes?: string | null;
+  postal_code?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
 };
 
 type CustomerForm = {
@@ -262,7 +268,13 @@ export default function CustomersPage() {
                 return (
                   <tr key={c.id} className="border-t">
                     <td className="px-3 py-2 font-mono text-xs text-gray-600">{displayId}</td>
-                    <td className="px-3 py-2 font-medium">{c.name}</td>
+                  <td className="px-3 py-2 font-medium">
+                    {c.name}
+                    <div className="text-xs text-gray-600">
+                      {[c.contact_first_name, c.contact_last_name].filter(Boolean).join(" ") ||
+                        ""}
+                    </div>
+                  </td>
                     <td className="px-3 py-2">{c.email ?? "-"}</td>
                     <td className="px-3 py-2">{c.phone ?? "-"}</td>
                     <td className="px-3 py-2">{location || "-"}</td>
@@ -457,6 +469,12 @@ export default function CustomersPage() {
                   {detail.website || "-"}
                 </p>
                 <p>
+                  <span className="font-semibold">Contact:</span>{" "}
+                  {[detail.contact_first_name, detail.contact_last_name]
+                    .filter(Boolean)
+                    .join(" ") || "-"}
+                </p>
+                <p>
                   <span className="font-semibold">Status:</span>{" "}
                   {detail.is_active ? "Active" : "Inactive"}
                 </p>
@@ -475,6 +493,12 @@ export default function CustomersPage() {
                 <p>
                   <span className="font-semibold">Notes:</span>{" "}
                   {(detail as any).notes || "-"}
+                </p>
+                <p>
+                  <span className="font-semibold">General Location:</span>{" "}
+                  {[detail.city, detail.state, detail.country].filter(Boolean).join(", ") ||
+                    detail.postal_code ||
+                    "-"}
                 </p>
               </div>
             </div>
