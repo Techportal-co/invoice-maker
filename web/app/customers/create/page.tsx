@@ -16,6 +16,11 @@ export default function CreateCustomerPage() {
     name: "",
     contact_first_name: "",
     contact_last_name: "",
+    fax_number: "",
+    payment_terms: "",
+    mode_of_payment: "",
+    mode_of_delivery: "",
+    delivery_terms: "",
     email: "",
     phone: "",
     website: "",
@@ -72,6 +77,11 @@ export default function CreateCustomerPage() {
     const optionalKeys: (keyof typeof form)[] = [
       "contact_first_name",
       "contact_last_name",
+      "fax_number",
+      "payment_terms",
+      "mode_of_payment",
+      "mode_of_delivery",
+      "delivery_terms",
       "email",
       "phone",
       "website",
@@ -189,12 +199,62 @@ export default function CreateCustomerPage() {
           </div>
 
           <div className="space-y-1">
+            <label className="text-sm font-medium">Fax Number</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.fax_number}
+              onChange={(e) => setValue("fax_number", e.target.value)}
+              placeholder="+1 555 987 6543"
+            />
+          </div>
+
+          <div className="space-y-1">
             <label className="text-sm font-medium">Website</label>
             <input
               className="border rounded-md px-3 py-2 w-full"
               value={form.website}
               onChange={(e) => setValue("website", e.target.value)}
               placeholder="https://acme.com"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Payment Terms</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.payment_terms}
+              onChange={(e) => setValue("payment_terms", e.target.value)}
+              placeholder="Net 30"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Mode of Payment</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.mode_of_payment}
+              onChange={(e) => setValue("mode_of_payment", e.target.value)}
+              placeholder="Credit Card / ACH / Wire"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Mode of Delivery</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.mode_of_delivery}
+              onChange={(e) => setValue("mode_of_delivery", e.target.value)}
+              placeholder="Courier / Freight"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Delivery Terms</label>
+            <input
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.delivery_terms}
+              onChange={(e) => setValue("delivery_terms", e.target.value)}
+              placeholder="Incoterms, notes"
             />
           </div>
 

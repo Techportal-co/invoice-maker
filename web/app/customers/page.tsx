@@ -37,6 +37,11 @@ type CustomerDetail = Customer & {
   city?: string | null;
   state?: string | null;
   country?: string | null;
+  fax_number?: string | null;
+  payment_terms?: string | null;
+  mode_of_payment?: string | null;
+  mode_of_delivery?: string | null;
+  delivery_terms?: string | null;
 };
 
 type CustomerForm = {
@@ -469,6 +474,10 @@ export default function CustomersPage() {
                   {detail.website || "-"}
                 </p>
                 <p>
+                  <span className="font-semibold">Fax:</span>{" "}
+                  {detail.fax_number || "-"}
+                </p>
+                <p>
                   <span className="font-semibold">Contact:</span>{" "}
                   {[detail.contact_first_name, detail.contact_last_name]
                     .filter(Boolean)
@@ -487,18 +496,28 @@ export default function CustomersPage() {
               </div>
               <div className="space-y-1">
                 <p>
+                  <span className="font-semibold">Payment Terms:</span>{" "}
+                  {detail.payment_terms || "-"}
+                </p>
+                <p>
+                  <span className="font-semibold">Mode of Payment:</span>{" "}
+                  {detail.mode_of_payment || "-"}
+                </p>
+                <p>
+                  <span className="font-semibold">Mode of Delivery:</span>{" "}
+                  {detail.mode_of_delivery || "-"}
+                </p>
+                <p>
+                  <span className="font-semibold">Delivery Terms:</span>{" "}
+                  {detail.delivery_terms || "-"}
+                </p>
+                <p>
                   <span className="font-semibold">Tax ID:</span>{" "}
                   {(detail as any).tax_id || "-"}
                 </p>
                 <p>
                   <span className="font-semibold">Notes:</span>{" "}
                   {(detail as any).notes || "-"}
-                </p>
-                <p>
-                  <span className="font-semibold">General Location:</span>{" "}
-                  {[detail.city, detail.state, detail.country].filter(Boolean).join(", ") ||
-                    detail.postal_code ||
-                    "-"}
                 </p>
               </div>
             </div>
