@@ -19,6 +19,7 @@ export default function CreateProductPage() {
     unit_price: "0", // sales price
     tax_type: "", // selected from dropdown
     reorder_level: "0",
+    is_service: false,
     is_active: true,
   });
 
@@ -56,6 +57,7 @@ export default function CreateProductPage() {
       tax_type: form.tax_type.trim() || null,
       quantity_on_hand: 0,
       reorder_level,
+      is_service: !!form.is_service,
       is_active: form.is_active,
     };
 
@@ -199,6 +201,15 @@ export default function CreateProductPage() {
               value={form.reorder_level}
               onChange={(e) => setValue("reorder_level", e.target.value)}
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.is_service}
+              onChange={(e) => setValue("is_service", e.target.checked)}
+            />
+            <span className="text-sm text-gray-700">Service Item</span>
           </div>
 
           <div className="flex items-center gap-2 md:col-span-2">

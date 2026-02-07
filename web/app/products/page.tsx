@@ -14,6 +14,7 @@ type Product = {
   unit_price: number; // treated as sales price
   tax_type?: string | null;
   reorder_level: number;
+  is_service?: boolean;
   is_active: boolean;
   created_at: string | null;
 };
@@ -28,6 +29,7 @@ type ProductForm = {
   unit_price: string; // sales price
   tax_type: string;
   reorder_level: string;
+  is_service: boolean;
   is_active: boolean;
 };
 
@@ -95,6 +97,7 @@ export default function ProductsPage() {
       unit_price: String(product.unit_price ?? ""),
       tax_type: (product as any).tax_type ?? "",
       reorder_level: String(product.reorder_level ?? ""),
+      is_service: (product as any).is_service ?? false,
       is_active: product.is_active ?? true,
     });
   };
@@ -134,6 +137,7 @@ export default function ProductsPage() {
       tax_type: form.tax_type.trim() || null,
       quantity_on_hand: 0,
       reorder_level,
+      is_service: !!form.is_service,
       is_active: !!form.is_active,
     };
 
@@ -203,7 +207,9 @@ export default function ProductsPage() {
                 <th className="px-3 py-2 text-left">Category</th>
                 <th className="px-3 py-2 text-left">Unit</th>
                 <th className="px-3 py-2 text-right">Sales Price</th>
+                <th className="px-3 py-2 text-left">Unit</th>
                 <th className="px-3 py-2 text-left">Tax Type</th>
+                <th className="px-3 py-2 text-left">Service</th>
                 <th className="px-3 py-2 text-left">Status</th>
                 <th className="px-3 py-2 text-left">Actions</th>
               </tr>
@@ -221,6 +227,9 @@ export default function ProductsPage() {
                     {Number(p.unit_price).toFixed(2)}
                   </td>
                   <td className="px-3 py-2">{(p as any).tax_type || "-"}</td>
+                  <td className="px-3 py-2">
+                    {(p as any).is_service ? "Yes" : "No"}
+                  </td>
                   <td className="px-3 py-2">
                     <span className="text-xs px-2 py-1 rounded border">
                       {p.is_active ? "Active" : "Inactive"}
@@ -324,6 +333,14 @@ export default function ProductsPage() {
                   <option value="zero">Zero</option>
                   <option value="exempt">Exempt</option>
                 </select>
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  checked={form.is_service}
+                  onChange={(e) => setForm({ ...form!, is_service: e.target.checked })}
+                />
+                Service Item
               </label>
               <label className="text-sm space-y-1">
                 <span className="font-medium">Quantity On Hand</span>

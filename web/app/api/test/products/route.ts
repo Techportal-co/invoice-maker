@@ -15,7 +15,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, organization_id, name, product_number, sku, category, unit, unit_price, tax_type, reorder_level, is_active, created_at"
+        "id, organization_id, name, product_number, sku, category, unit, unit_price, tax_type, reorder_level, is_service, is_active, created_at"
       )
       .eq("organization_id", org.orgId)
       .order("created_at", { ascending: false });
@@ -69,6 +69,7 @@ export async function POST(req: Request) {
       tax_type: body?.tax_type ? String(body.tax_type) : null,
       quantity_on_hand: 0,
       reorder_level,
+      is_service: typeof body?.is_service === "boolean" ? body.is_service : false,
       is_active: typeof body?.is_active === "boolean" ? body.is_active : true,
     };
 

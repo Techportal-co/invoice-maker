@@ -47,6 +47,7 @@ export async function PATCH(
     "unit_price",
     "tax_type",
     "reorder_level",
+    "is_service",
     "is_active",
   ];
   for (const key of allowed) {
