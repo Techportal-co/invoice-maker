@@ -43,7 +43,7 @@ export async function PATCH(
     "sku",
     "category",
     "unit_price",
-    "tax_rate",
+    "tax_type",
     "quantity_on_hand",
     "reorder_level",
     "is_active",

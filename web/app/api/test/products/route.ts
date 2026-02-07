@@ -15,7 +15,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("products")
       .select(
-        "id, organization_id, name, sku, category, unit_price, tax_rate, quantity_on_hand, reorder_level, is_active, created_at"
+        "id, organization_id, name, sku, category, unit_price, tax_type, quantity_on_hand, reorder_level, is_active, created_at"
       )
       .eq("organization_id", org.orgId)
       .order("created_at", { ascending: false });
@@ -43,13 +43,9 @@ export async function POST(req: Request) {
     if (!name) return NextResponse.json({ error: "name is required" }, { status: 400 });
 
     const unit_price = Number(body?.unit_price);
-    const tax_rate = Number(body?.tax_rate);
 
     if (!Number.isFinite(unit_price) || unit_price < 0) {
       return NextResponse.json({ error: "unit_price must be >= 0" }, { status: 400 });
-    }
-    if (!Number.isFinite(tax_rate) || tax_rate < 0) {
-      return NextResponse.json({ error: "tax_rate must be >= 0" }, { status: 400 });
     }
 
     const quantity_on_hand =
@@ -76,7 +72,7 @@ export async function POST(req: Request) {
       sku: body?.sku ? String(body.sku) : null,
       category: body?.category ? String(body.category) : null,
       unit_price,
-      tax_rate,
+      tax_type: body?.tax_type ? String(body.tax_type) : null,
       quantity_on_hand,
       reorder_level,
       is_active: typeof body?.is_active === "boolean" ? body.is_active : true,

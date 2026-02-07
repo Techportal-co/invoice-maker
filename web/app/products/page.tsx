@@ -10,7 +10,7 @@ type Product = {
   sku: string | null;
   category: string | null;
   unit_price: number; // treated as sales price
-  tax_rate: number;
+  tax_type?: string | null;
   quantity_on_hand: number;
   reorder_level: number;
   is_active: boolean;
@@ -23,7 +23,7 @@ type ProductForm = {
   sku: string;
   category: string;
   unit_price: string; // sales price
-  tax_rate_percent: string;
+  tax_type: string;
   quantity_on_hand: string;
   reorder_level: string;
   is_active: boolean;
@@ -89,7 +89,7 @@ export default function ProductsPage() {
       sku: product.sku ?? "",
       category: product.category ?? "",
       unit_price: String(product.unit_price ?? ""),
-      tax_rate_percent: String((Number(product.tax_rate) || 0) * 100),
+      tax_type: (product as any).tax_type ?? "",
       quantity_on_hand: String(product.quantity_on_hand ?? ""),
       reorder_level: String(product.reorder_level ?? ""),
       is_active: product.is_active ?? true,
@@ -109,16 +109,11 @@ export default function ProductsPage() {
     }
 
     const unit_price = Number(form.unit_price);
-    const tax_rate = Number(form.tax_rate_percent) / 100;
     const quantity_on_hand = Number(form.quantity_on_hand);
     const reorder_level = Number(form.reorder_level);
 
     if (!Number.isFinite(unit_price) || unit_price < 0) {
       alert("Sales price must be a number >= 0");
-      return;
-    }
-    if (!Number.isFinite(tax_rate) || tax_rate < 0) {
-      alert("Tax rate must be a number >= 0");
       return;
     }
     if (!Number.isFinite(quantity_on_hand) || quantity_on_hand < 0) {
@@ -136,7 +131,7 @@ export default function ProductsPage() {
       sku: form.sku.trim() || null,
       category: form.category.trim() || null,
       unit_price,
-      tax_rate,
+      tax_type: form.tax_type.trim() || null,
       quantity_on_hand,
       reorder_level,
       is_active: !!form.is_active,
@@ -206,7 +201,7 @@ export default function ProductsPage() {
                 <th className="px-3 py-2 text-left">SKU</th>
                 <th className="px-3 py-2 text-left">Category</th>
                 <th className="px-3 py-2 text-right">Sales Price</th>
-                <th className="px-3 py-2 text-right">Tax %</th>
+                <th className="px-3 py-2 text-left">Tax Type</th>
                 <th className="px-3 py-2 text-right">On Hand</th>
                 <th className="px-3 py-2 text-left">Status</th>
                 <th className="px-3 py-2 text-left">Actions</th>
@@ -222,9 +217,7 @@ export default function ProductsPage() {
                   <td className="px-3 py-2 text-right">
                     {Number(p.unit_price).toFixed(2)}
                   </td>
-                  <td className="px-3 py-2 text-right">
-                    {(Number(p.tax_rate) * 100).toFixed(2)}
-                  </td>
+                  <td className="px-3 py-2">{(p as any).tax_type || "-"}</td>
                   <td className="px-3 py-2 text-right">{p.quantity_on_hand ?? 0}</td>
                   <td className="px-3 py-2">
                     <span className="text-xs px-2 py-1 rounded border">
@@ -299,16 +292,18 @@ export default function ProductsPage() {
                 />
               </label>
               <label className="text-sm space-y-1">
-                <span className="font-medium">Tax Rate (%)</span>
-                <input
-                  type="number"
-                  step="0.01"
+                <span className="font-medium">Tax Type</span>
+                <select
                   className="border rounded px-3 py-2 w-full"
-                  value={form.tax_rate_percent}
-                  onChange={(e) =>
-                    setForm({ ...form!, tax_rate_percent: e.target.value })
-                  }
-                />
+                  value={form.tax_type}
+                  onChange={(e) => setForm({ ...form!, tax_type: e.target.value })}
+                >
+                  <option value="">Select tax type</option>
+                  <option value="standard">Standard</option>
+                  <option value="reduced">Reduced</option>
+                  <option value="zero">Zero</option>
+                  <option value="exempt">Exempt</option>
+                </select>
               </label>
               <label className="text-sm space-y-1">
                 <span className="font-medium">Quantity On Hand</span>

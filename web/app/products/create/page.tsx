@@ -15,7 +15,7 @@ export default function CreateProductPage() {
     sku: "",
     category: "",
     unit_price: "0", // sales price
-    tax_rate_percent: "0", // user enters % in UI
+    tax_type: "", // selected from dropdown
     quantity_on_hand: "0",
     reorder_level: "0",
     is_active: true,
@@ -36,16 +36,11 @@ export default function CreateProductPage() {
     }
 
     const unit_price = Number(form.unit_price);
-    const tax_rate = Number(form.tax_rate_percent) / 100;
     const quantity_on_hand = Number(form.quantity_on_hand);
     const reorder_level = Number(form.reorder_level);
 
     if (!Number.isFinite(unit_price) || unit_price < 0) {
       setErrorMsg("Sales price must be a number >= 0.");
-      return;
-    }
-    if (!Number.isFinite(tax_rate) || tax_rate < 0) {
-      setErrorMsg("Tax rate must be a number >= 0.");
       return;
     }
     if (!Number.isFinite(quantity_on_hand) || quantity_on_hand < 0) {
@@ -60,7 +55,7 @@ export default function CreateProductPage() {
     const payload: Record<string, any> = {
       name,
       unit_price,
-      tax_rate,
+      tax_type: form.tax_type.trim() || null,
       quantity_on_hand,
       reorder_level,
       is_active: form.is_active,
@@ -163,14 +158,18 @@ export default function CreateProductPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium">Tax Rate (%)</label>
-            <input
-              type="number"
-              step="0.01"
+            <label className="text-sm font-medium">Tax Type</label>
+            <select
               className="border rounded-md px-3 py-2 w-full"
-              value={form.tax_rate_percent}
-              onChange={(e) => setValue("tax_rate_percent", e.target.value)}
-            />
+              value={form.tax_type}
+              onChange={(e) => setValue("tax_type", e.target.value)}
+            >
+              <option value="">Select tax type</option>
+              <option value="standard">Standard</option>
+              <option value="reduced">Reduced</option>
+              <option value="zero">Zero</option>
+              <option value="exempt">Exempt</option>
+            </select>
           </div>
 
           <div className="space-y-1">
