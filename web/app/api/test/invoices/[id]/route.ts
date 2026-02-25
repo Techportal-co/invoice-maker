@@ -24,6 +24,7 @@ export async function GET(
         invoice_number,
         status,
         subtotal,
+        tax_total,
         total,
         created_at,
         customer:customers (
@@ -40,6 +41,15 @@ export async function GET(
           unit_price,
           tax_rate,
           line_total
+        ),
+        payments (
+          id,
+          amount,
+          payment_date,
+          payment_method,
+          reference_number,
+          notes,
+          created_at
         )
       `
       )
@@ -49,8 +59,14 @@ export async function GET(
 
     if (error) return NextResponse.json({ error: error.message }, { status: 404 });
 
+    const paid = ((data as any).payments ?? []).reduce(
+      (sum: number, p: any) => sum + Number(p.amount),
+      0
+    );
+    const balance_due = Number(data.total) - paid;
+
     return NextResponse.json(
-      { invoice: data },
+      { invoice: { ...data, amount_paid: paid, balance_due } },
       { status: 200, headers: { "Cache-Control": "no-store" } }
     );
   } catch (e: any) {

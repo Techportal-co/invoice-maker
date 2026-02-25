@@ -9,7 +9,7 @@ interface Product {
   description: string | null;
   sku: string | null;
   unit_price: number;
-  tax_rate: number;
+  tax_type: string | null;
 }
 
 interface Customer {
@@ -23,7 +23,7 @@ interface LineItem {
   description: string;
   quantity: number;
   unit_price: number;
-  tax_rate: number; // 0.05 = 5%
+  tax_rate: number; // derived from org tax config, used only for preview
   line_total: number;
 }
 
@@ -34,6 +34,8 @@ export default function CreateInvoicePage() {
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [orgTaxMap, setOrgTaxMap] = useState<Record<string, number>>({});
+
   const [lineItems, setLineItems] = useState<LineItem[]>([
     {
       id: crypto.randomUUID(),
@@ -46,45 +48,57 @@ export default function CreateInvoicePage() {
     },
   ]);
 
+  const defaultDueDate = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().split("T")[0];
+  })();
+  const [dueDate, setDueDate] = useState(defaultDueDate);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Fetch customers + products
+  // Fetch customers, products, and org tax rates in parallel
   useEffect(() => {
     const fetchData = async () => {
       setLoadError(null);
 
       try {
-        const [customersRes, productsRes] = await Promise.all([
+        const [customersRes, productsRes, taxRes] = await Promise.all([
           fetch("/api/test/customers", { cache: "no-store" }),
           fetch("/api/test/products", { cache: "no-store" }),
+          fetch("/api/test/settings/tax", { cache: "no-store" }),
         ]);
 
         const customersText = await customersRes.text();
         const productsText = await productsRes.text();
+        const taxText = await taxRes.text();
 
         if (!customersRes.ok) {
-          console.error("Customers API failed:", customersText);
-          setLoadError(
-            (prev) => (prev ? prev + " | " : "") + `Customers: ${customersText}`
-          );
+          setLoadError((prev) => (prev ? prev + " | " : "") + `Customers: ${customersText}`);
         } else {
           const data = JSON.parse(customersText);
           setCustomers(data.customers ?? []);
         }
 
         if (!productsRes.ok) {
-          console.error("Products API failed:", productsText);
-          setLoadError(
-            (prev) => (prev ? prev + " | " : "") + `Products: ${productsText}`
-          );
+          setLoadError((prev) => (prev ? prev + " | " : "") + `Products: ${productsText}`);
         } else {
           const data = JSON.parse(productsText);
           setProducts(data.products ?? []);
         }
+
+        if (taxRes.ok) {
+          const data = JSON.parse(taxText);
+          const map: Record<string, number> = {};
+          for (const row of data.tax_rates ?? []) {
+            map[row.tax_type] = Number(row.tax_rate);
+          }
+          setOrgTaxMap(map);
+        }
+        // Tax config failing is non-fatal — preview just shows 0% until configured
       } catch (e: any) {
-        console.error("Fetch crashed:", e);
         setLoadError(e?.message ?? "Fetch crashed");
       }
     };
@@ -110,11 +124,14 @@ export default function CreateInvoicePage() {
     const product = products.find((p) => p.id === productId);
     if (!product) return;
 
+    // Use the org's configured rate for preview; server re-derives it on submit
+    const tax_rate = product.tax_type ? (orgTaxMap[product.tax_type] ?? 0) : 0;
+
     updateLineItem(lineId, {
       product_id: product.id,
       description: product.description || product.name,
       unit_price: product.unit_price,
-      tax_rate: product.tax_rate,
+      tax_rate,
     });
   };
 
@@ -167,7 +184,6 @@ export default function CreateInvoicePage() {
         description: li.description.trim(),
         quantity: li.quantity,
         unit_price: li.unit_price,
-        tax_rate: li.tax_rate,
       }))
       .filter((li) => li.description.length > 0);
 
@@ -184,6 +200,7 @@ export default function CreateInvoicePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_id: selectedCustomerId,
+          due_date: dueDate || null,
           line_items: cleanedItems,
         }),
       });
@@ -225,21 +242,33 @@ export default function CreateInvoicePage() {
         </div>
       )}
 
-      {/* Customer */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">Customer</label>
-        <select
-          className="border rounded-md px-3 py-2 w-full"
-          value={selectedCustomerId}
-          onChange={(e) => setSelectedCustomerId(e.target.value)}
-        >
-          <option value="">Select a customer</option>
-          {customers.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+      {/* Customer + Due Date */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Customer</label>
+          <select
+            className="border rounded-md px-3 py-2 w-full"
+            value={selectedCustomerId}
+            onChange={(e) => setSelectedCustomerId(e.target.value)}
+          >
+            <option value="">Select a customer</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Due Date</label>
+          <input
+            type="date"
+            className="border rounded-md px-3 py-2 w-full"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Line items */}
@@ -251,7 +280,6 @@ export default function CreateInvoicePage() {
               <th className="px-3 py-2 text-left">Description</th>
               <th className="px-3 py-2 text-right">Qty</th>
               <th className="px-3 py-2 text-right">Unit Price</th>
-              <th className="px-3 py-2 text-right">Tax %</th>
               <th className="px-3 py-2 text-right">Line Total</th>
               <th className="px-3 py-2" />
             </tr>
@@ -310,20 +338,6 @@ export default function CreateInvoicePage() {
                     onChange={(e) =>
                       updateLineItem(item.id, {
                         unit_price: Math.max(0, Number(e.target.value) || 0),
-                      })
-                    }
-                  />
-                </td>
-
-                <td className="px-3 py-2 text-right">
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="border rounded-md px-2 py-1 w-20 text-right"
-                    value={item.tax_rate * 100}
-                    onChange={(e) =>
-                      updateLineItem(item.id, {
-                        tax_rate: Math.max(0, (Number(e.target.value) || 0) / 100),
                       })
                     }
                   />
