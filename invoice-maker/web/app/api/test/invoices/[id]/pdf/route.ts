@@ -95,8 +95,8 @@ export async function GET(
     // Customer block
     drawText("Bill To", 12, true);
     drawText(customer?.name ?? "-");
-    if (customer?.email) drawText(invoice.customer.email);
-    if (customer?.phone) drawText(invoice.customer.phone);
+    if (customer?.email) drawText(customer.email);
+    if (customer?.phone) drawText(customer.phone);
 
     const addrParts = [
       customer?.address,
