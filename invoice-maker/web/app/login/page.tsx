@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/browser";
 
-export default function LoginPage() {
+function LoginForm() {
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,58 +43,65 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md border rounded-xl p-6 space-y-4">
-        <h1 className="text-2xl font-semibold">Log in</h1>
+    <div className="w-full max-w-md border rounded-xl p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">Log in</h1>
 
-        {err && (
-          <div className="border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded">
-            {err}
-          </div>
-        )}
-
-        <form onSubmit={onSubmit} className="space-y-3">
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Email</label>
-            <input
-              className="border rounded-md px-3 py-2 w-full"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              autoComplete="email"
-              required
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Password</label>
-            <input
-              className="border rounded-md px-3 py-2 w-full"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
-          <button
-            disabled={loading}
-            className="w-full px-4 py-2 rounded-md bg-black text-white text-sm font-medium disabled:opacity-60"
-            type="submit"
-          >
-            {loading ? "Logging in..." : "Log in"}
-          </button>
-        </form>
-
-        <div className="text-sm text-gray-600">
-          Don’t have an account?{" "}
-          <Link className="underline" href="/signup">
-            Sign up
-          </Link>
+      {err && (
+        <div className="border border-red-200 bg-red-50 text-red-700 px-3 py-2 rounded">
+          {err}
         </div>
+      )}
+
+      <form onSubmit={onSubmit} className="space-y-3">
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Email</label>
+          <input
+            className="border rounded-md px-3 py-2 w-full"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            autoComplete="email"
+            required
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Password</label>
+          <input
+            className="border rounded-md px-3 py-2 w-full"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            type="password"
+            autoComplete="current-password"
+            required
+          />
+        </div>
+
+        <button
+          disabled={loading}
+          className="w-full px-4 py-2 rounded-md bg-black text-white text-sm font-medium disabled:opacity-60"
+          type="submit"
+        >
+          {loading ? "Logging in..." : "Log in"}
+        </button>
+      </form>
+
+      <div className="text-sm text-gray-600">
+        Don't have an account?{" "}
+        <Link className="underline" href="/signup">
+          Sign up
+        </Link>
       </div>
     </div>
   );
 }
 
+export default function LoginPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <Suspense fallback={<div className="text-sm text-gray-500">Loading...</div>}>
+        <LoginForm />
+      </Suspense>
+    </div>
+  );
+}
