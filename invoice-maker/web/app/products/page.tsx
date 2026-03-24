@@ -31,6 +31,7 @@ type ProductForm = {
   unit_price: string; // sales price
   tax_type: string;
   reorder_level: string;
+  quantity_on_hand: string;
   is_service: boolean;
   is_active: boolean;
 };
@@ -100,6 +101,7 @@ export default function ProductsPage() {
       unit_price: String(product.unit_price ?? ""),
       tax_type: (product as any).tax_type ?? "",
       reorder_level: String(product.reorder_level ?? ""),
+      quantity_on_hand: String((product as any).quantity_on_hand ?? ""),
       is_service: (product as any).is_service ?? false,
       is_active: product.is_active ?? true,
     });
